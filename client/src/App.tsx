@@ -141,6 +141,18 @@ function App() {
         <Button 
           variant="contained" 
           onClick={() => {
+            lotteryWithSigner.withdrawUsageFees();
+          }}
+          sx={{
+            display: isOwner ? 'block' : 'none'
+          }}
+        >
+         Withdraw Usage Fees
+        </Button>
+
+        <Button 
+          variant="contained" 
+          onClick={() => {
             lotteryWithSigner.drawLottery();
           }}
           sx={{
