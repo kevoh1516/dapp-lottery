@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract Lottery is AccessControl {
   mapping(uint => address) public ticketsToPlayers;
@@ -12,6 +12,7 @@ contract Lottery is AccessControl {
   bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
   bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
+  using SafeERC20 for IERC20;
   IERC20 MokContract;
 
   uint public ticketPrice;
@@ -19,7 +20,9 @@ contract Lottery is AccessControl {
   uint public usageFees;
   uint public sinceDraw;
 
-  event Winner(address winner);
+  event Winner(address winner, uint lotteryPool);
+  event BuyTicket(address buyer, uint numTickets);
+  event SetTicketPrice(address setter, uint oldTicketPrice, uint newTicketPrice);
 
   constructor(address mokAddress, address owner, address manager1, address manager2) {
     ticketPrice = 20;
@@ -34,47 +37,33 @@ contract Lottery is AccessControl {
 
   function buyTicket(uint numTickets) external {
     uint totalPrice = ticketPrice * numTickets;
-    MokContract.transferFrom(msg.sender, address(this), totalPrice);
     for(uint i = totalTickets; i < totalTickets + numTickets; i++){
       ticketsToPlayers[i] = msg.sender;
     }
     totalTickets += numTickets;
     usageFees += totalPrice * 500 / 10000;
+    MokContract.safeTransferFrom(msg.sender, address(this), totalPrice);
+    emit BuyTicket(msg.sender, numTickets);
   }
 
   function drawLottery() external onlyRole(MANAGER_ROLE) {
-    require(block.timestamp - sinceDraw > 60000, "Wait 1 minutes between each draw.");
+    require(block.timestamp - sinceDraw > 1 minutes, "Wait 1 minutes between each draw.");
 
     uint ticketDraw = randomDraw();
     address winner = ticketsToPlayers[ticketDraw];
-    uint totalPool = MokContract.balanceOf(address(this));
-    uint lotteryPool = totalPool - usageFees;
-    MokContract.approve(winner, lotteryPool);
-    MokContract.transfer(winner, lotteryPool);
-    emit Winner(winner);
+    uint lotteryPool = MokContract.balanceOf(address(this)) - usageFees;
 
     totalTickets = 0;
     sinceDraw = block.timestamp;
-  }
 
-  function getUsageFees() external view returns (uint) {
-    return usageFees;
-  }
-
-  function getTicketOwner(uint ticketNumber) external view returns (address) {
-    return ticketsToPlayers[ticketNumber];
-  }
-
-  function getTotalTickets() external view returns (uint) {
-    return totalTickets;
-  }
-
-  function getTicketPrice() external view returns (uint) {
-    return ticketPrice;
+    MokContract.safeTransfer(winner, lotteryPool);
+    emit Winner(winner, lotteryPool);
   }
 
   function setTicketPrice(uint price) external onlyRole(OWNER_ROLE) {
+    uint oldTicketPrice = ticketPrice;
     ticketPrice = price;
+    emit SetTicketPrice(msg.sender, oldTicketPrice, ticketPrice);
   }
 
   function randomDraw() private view returns (uint) {

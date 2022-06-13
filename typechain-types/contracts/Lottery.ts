@@ -34,10 +34,6 @@ export interface LotteryInterface extends utils.Interface {
     "buyTicket(uint256)": FunctionFragment;
     "drawLottery()": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
-    "getTicketOwner(uint256)": FunctionFragment;
-    "getTicketPrice()": FunctionFragment;
-    "getTotalTickets()": FunctionFragment;
-    "getUsageFees()": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
@@ -59,10 +55,6 @@ export interface LotteryInterface extends utils.Interface {
       | "buyTicket"
       | "drawLottery"
       | "getRoleAdmin"
-      | "getTicketOwner"
-      | "getTicketPrice"
-      | "getTotalTickets"
-      | "getUsageFees"
       | "grantRole"
       | "hasRole"
       | "renounceRole"
@@ -99,22 +91,6 @@ export interface LotteryInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "getRoleAdmin",
     values: [BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getTicketOwner",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getTicketPrice",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getTotalTickets",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getUsageFees",
-    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "grantRole",
@@ -173,22 +149,6 @@ export interface LotteryInterface extends utils.Interface {
     functionFragment: "getRoleAdmin",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "getTicketOwner",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getTicketPrice",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getTotalTickets",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getUsageFees",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
   decodeFunctionResult(
@@ -220,17 +180,32 @@ export interface LotteryInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "usageFees", data: BytesLike): Result;
 
   events: {
+    "BuyTicket(address,uint256)": EventFragment;
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
     "RoleGranted(bytes32,address,address)": EventFragment;
     "RoleRevoked(bytes32,address,address)": EventFragment;
-    "Winner(address)": EventFragment;
+    "SetTicketPrice(address,uint256,uint256)": EventFragment;
+    "Winner(address,uint256)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "BuyTicket"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetTicketPrice"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Winner"): EventFragment;
 }
+
+export interface BuyTicketEventObject {
+  buyer: string;
+  numTickets: BigNumber;
+}
+export type BuyTicketEvent = TypedEvent<
+  [string, BigNumber],
+  BuyTicketEventObject
+>;
+
+export type BuyTicketEventFilter = TypedEventFilter<BuyTicketEvent>;
 
 export interface RoleAdminChangedEventObject {
   role: string;
@@ -269,10 +244,23 @@ export type RoleRevokedEvent = TypedEvent<
 
 export type RoleRevokedEventFilter = TypedEventFilter<RoleRevokedEvent>;
 
+export interface SetTicketPriceEventObject {
+  setter: string;
+  oldTicketPrice: BigNumber;
+  newTicketPrice: BigNumber;
+}
+export type SetTicketPriceEvent = TypedEvent<
+  [string, BigNumber, BigNumber],
+  SetTicketPriceEventObject
+>;
+
+export type SetTicketPriceEventFilter = TypedEventFilter<SetTicketPriceEvent>;
+
 export interface WinnerEventObject {
   winner: string;
+  lotteryPool: BigNumber;
 }
-export type WinnerEvent = TypedEvent<[string], WinnerEventObject>;
+export type WinnerEvent = TypedEvent<[string, BigNumber], WinnerEventObject>;
 
 export type WinnerEventFilter = TypedEventFilter<WinnerEvent>;
 
@@ -319,17 +307,6 @@ export interface Lottery extends BaseContract {
     ): Promise<ContractTransaction>;
 
     getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<[string]>;
-
-    getTicketOwner(
-      ticketNumber: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    getTicketPrice(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    getTotalTickets(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    getUsageFees(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     grantRole(
       role: BytesLike,
@@ -396,17 +373,6 @@ export interface Lottery extends BaseContract {
 
   getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
 
-  getTicketOwner(
-    ticketNumber: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  getTicketPrice(overrides?: CallOverrides): Promise<BigNumber>;
-
-  getTotalTickets(overrides?: CallOverrides): Promise<BigNumber>;
-
-  getUsageFees(overrides?: CallOverrides): Promise<BigNumber>;
-
   grantRole(
     role: BytesLike,
     account: string,
@@ -470,17 +436,6 @@ export interface Lottery extends BaseContract {
 
     getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
 
-    getTicketOwner(
-      ticketNumber: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    getTicketPrice(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getTotalTickets(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getUsageFees(overrides?: CallOverrides): Promise<BigNumber>;
-
     grantRole(
       role: BytesLike,
       account: string,
@@ -530,6 +485,12 @@ export interface Lottery extends BaseContract {
   };
 
   filters: {
+    "BuyTicket(address,uint256)"(
+      buyer?: null,
+      numTickets?: null
+    ): BuyTicketEventFilter;
+    BuyTicket(buyer?: null, numTickets?: null): BuyTicketEventFilter;
+
     "RoleAdminChanged(bytes32,bytes32,bytes32)"(
       role?: BytesLike | null,
       previousAdminRole?: BytesLike | null,
@@ -563,8 +524,22 @@ export interface Lottery extends BaseContract {
       sender?: string | null
     ): RoleRevokedEventFilter;
 
-    "Winner(address)"(winner?: null): WinnerEventFilter;
-    Winner(winner?: null): WinnerEventFilter;
+    "SetTicketPrice(address,uint256,uint256)"(
+      setter?: null,
+      oldTicketPrice?: null,
+      newTicketPrice?: null
+    ): SetTicketPriceEventFilter;
+    SetTicketPrice(
+      setter?: null,
+      oldTicketPrice?: null,
+      newTicketPrice?: null
+    ): SetTicketPriceEventFilter;
+
+    "Winner(address,uint256)"(
+      winner?: null,
+      lotteryPool?: null
+    ): WinnerEventFilter;
+    Winner(winner?: null, lotteryPool?: null): WinnerEventFilter;
   };
 
   estimateGas: {
@@ -587,17 +562,6 @@ export interface Lottery extends BaseContract {
       role: BytesLike,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    getTicketOwner(
-      ticketNumber: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    getTicketPrice(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getTotalTickets(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getUsageFees(overrides?: CallOverrides): Promise<BigNumber>;
 
     grantRole(
       role: BytesLike,
@@ -669,17 +633,6 @@ export interface Lottery extends BaseContract {
       role: BytesLike,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
-
-    getTicketOwner(
-      ticketNumber: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getTicketPrice(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    getTotalTickets(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    getUsageFees(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     grantRole(
       role: BytesLike,
