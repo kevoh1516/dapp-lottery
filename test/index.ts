@@ -60,6 +60,14 @@ describe("Lottery", function () {
     expect(await lottery.ticketsToPlayers(0)).to.equal(owner.address);
   });
 
+  it("Should buy one ticket and withdraw usage fees", async function () {
+    await lottery.buyTicket(1);
+    const ownerBal = await mok.balanceOf(owner.address);
+    await lottery.connect(owner).withdrawUsageFees();
+    expect(await mok.balanceOf(owner.address)).to.equal(ownerBal.toNumber() + 1);
+    expect(await lottery.usageFees()).to.equal(0);
+  });
+
   it("Should buy three tickets", async function () {
     await lottery.buyTicket(3);
     expect(await lottery.totalTickets()).to.equal(3);

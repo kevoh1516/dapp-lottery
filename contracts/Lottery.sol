@@ -23,6 +23,7 @@ contract Lottery is AccessControl {
   event Winner(address winner, uint lotteryPool);
   event BuyTicket(address buyer, uint numTickets);
   event SetTicketPrice(address setter, uint oldTicketPrice, uint newTicketPrice);
+  event WithdrawUsageFees(address withdrawer, uint usageFees);
 
   constructor(address mokAddress, address owner, address manager1, address manager2) {
     ticketPrice = 20;
@@ -59,6 +60,13 @@ contract Lottery is AccessControl {
 
     MokContract.safeTransfer(winner, lotteryPool);
     emit Winner(winner, lotteryPool);
+  }
+
+  function withdrawUsageFees() external onlyRole(OWNER_ROLE) {
+    uint _usageFees = usageFees;
+    usageFees = 0;
+    MokContract.safeTransfer(msg.sender, _usageFees);
+    emit WithdrawUsageFees(msg.sender, _usageFees);
   }
 
   function setTicketPrice(uint price) external onlyRole(OWNER_ROLE) {
