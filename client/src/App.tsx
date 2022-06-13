@@ -40,7 +40,7 @@ function App() {
   }
 
   useEffect(() => {
-    lotteryWithSigner.getTicketPrice().then((price: BigNumber) => {
+    lotteryWithSigner.ticketPrice().then((price: BigNumber) => {
       setTicketPrice(price.toNumber());
       console.log("setting ticket price to", price.toNumber());
     });

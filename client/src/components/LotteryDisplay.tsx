@@ -9,7 +9,7 @@ export const LotteryDisplay = () => {
 
   const getLotteryPool = () => {
     mokWithSigner.balanceOf(lotteryWithSigner.address).then((totalPool: BigNumber) => {
-      lotteryWithSigner.getUsageFees().then((fees: BigNumber) => {
+      lotteryWithSigner.usageFees().then((fees: BigNumber) => {
         console.log("total pool", totalPool.toNumber() - fees.toNumber());
         setLotteryPool(totalPool.toNumber() - fees.toNumber());
       })

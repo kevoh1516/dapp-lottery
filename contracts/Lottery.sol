@@ -47,11 +47,12 @@ contract Lottery is AccessControl {
   }
 
   function drawLottery() external onlyRole(MANAGER_ROLE) {
+    uint lotteryPool = MokContract.balanceOf(address(this)) - usageFees;
     require(block.timestamp - sinceDraw > 1 minutes, "Wait 1 minutes between each draw.");
+    require(lotteryPool > 0, "Nothing in the lottery to draw.");
 
     uint ticketDraw = randomDraw();
     address winner = ticketsToPlayers[ticketDraw];
-    uint lotteryPool = MokContract.balanceOf(address(this)) - usageFees;
 
     totalTickets = 0;
     sinceDraw = block.timestamp;
